@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Skipper",
-  "version": "0.1.0",
-  "version_name": "0.1.0 beta",
-  "description": "An extension that auto skips the youtube ads.",
+  "name": "AutoSkip",
+  "version": "1.0.0",
+  "version_name": "1.0.0 release",
+  "description": "Autoskip: Ads Auto Skip Extension for Youtube & Youtube Music",
   "homepage_url": "https://sakel.dev/",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Open My Extension"
+    "default_title": "Manage Autoskip settings"
   },
   "host_permissions": [
     "https://www.youtube.com/*",

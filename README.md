@@ -1,4 +1,4 @@
-# Youtube & Youtube Music Ads Auto Skip Extension
+# AutoSkip: Ads Auto Skip Extension for Youtube & Youtube Music 
 
 A lightweight, open-source browser extension that automatically presses the **Skip Ad** button on YouTube and YouTube Music when it becomes available.
 

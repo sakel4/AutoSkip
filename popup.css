@@ -262,3 +262,154 @@ input[type="range"]::-moz-range-track {
   background: #343943;
   border-radius: 999px;
 }
+
+/* About section */
+
+#about-section {
+  margin-top: 14px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#about-section:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Remove default details marker */
+
+#about-section summary {
+  list-style: none;
+}
+
+#about-section summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Header */
+
+#about-section summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  user-select: none;
+
+  color: var(--text);
+
+  transition: background 0.2s ease;
+}
+
+#about-section summary:hover {
+  background: var(--surface-hover);
+}
+
+#about-section summary:focus-visible {
+  outline: 2px solid rgba(255, 59, 48, 0.7);
+  outline-offset: -2px;
+}
+
+/* Chevron */
+
+.about-chevron {
+  color: var(--text-muted);
+
+  transition:
+    transform 0.25s ease,
+    color 0.2s ease;
+}
+
+#about-section[open] .about-chevron {
+  transform: rotate(180deg);
+  color: var(--text);
+}
+
+/* Open content */
+
+.about-content {
+  padding: 0 14px 14px;
+
+  border-top: 1px solid var(--border);
+
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.about-content p {
+  margin: 13px 0;
+}
+
+.about-content strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Links */
+
+.about-links {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  margin-top: 12px;
+}
+
+.about-links a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px 11px;
+
+  color: var(--text);
+  text-decoration: none;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  font-size: 12.5px;
+  font-weight: 500;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.about-links a:hover {
+  background: rgba(255, 59, 48, 0.08);
+  border-color: rgba(255, 59, 48, 0.25);
+
+  transform: translateY(-1px);
+}
+
+.external-icon {
+  color: var(--text-muted);
+
+  font-size: 14px;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.about-links a:hover .external-icon {
+  color: var(--accent);
+  transform: translate(1px, -1px);
+}
