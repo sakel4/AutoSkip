@@ -1,18 +1,8 @@
-//const buttonIds = ["skip-button:i", "skip-button:2"];
 const defaultSettings = {
   enabled: true,
   notifications: false,
   skipDelay: 0
 };
-
-console.log("[Skip Extension] content script loaded");
-
-console.log({
-  chromeExists: typeof chrome !== "undefined",
-  runtimeExists: typeof chrome?.runtime !== "undefined",
-  sendMessageExists: typeof chrome?.runtime?.sendMessage !== "undefined",
-  extensionId: chrome?.runtime?.id
-});
 
 let clickInProgress = false;
 let lastClickTime = 0;
@@ -21,12 +11,7 @@ function showVideoNotification(message, duration = 1000) {
   const player = document.querySelector("#movie_player") ||
                  document.querySelector("#song-media-window")
 
-  console.log("[Skip Extension] showVideoNotification", {
-    message, duration
-  });
-
   if (!player) {
-    console.log("[Skip Extension] Player not found");
     return;
   }
 
@@ -126,7 +111,6 @@ async function trySkipAd() {
   if (!button) {
     return;
   }
-  console.log("[Skip Extension] Skip button detected", { button });
 
   // Lock immediately so the MutationObserver can't queue up duplicate
   // attempts while we wait out the configured delay.
@@ -161,7 +145,6 @@ async function trySkipAd() {
       x,
       y
     });
-    console.log("[Skip Extension] Result:", response);
     if (response?.success && settings.notifications) {
       showVideoNotification("Ad skipped");
     }
@@ -172,10 +155,9 @@ async function trySkipAd() {
   }
 }
 
-// Check immediately.
 trySkipAd();
 
-// Watch YouTube's dynamically changing DOM.
+// Observe YouTube's dynamically changing DOM.
 const observer = new MutationObserver(() => {
   trySkipAd();
 });

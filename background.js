@@ -39,12 +39,6 @@ chrome.runtime.onMessage.addListener(
 async function clickAtPosition(tabId, x, y) {
   const target = { tabId };
 
-  console.log("[Skip Extension] Attaching debugger", {
-    tabId,
-    x,
-    y
-  });
-
   try {
     await chrome.debugger.attach(target, "1.3");
 
@@ -76,7 +70,6 @@ async function clickAtPosition(tabId, x, y) {
       }
     );
 
-    console.log("[Skip Extension] Click dispatched");
   } finally {
     try {
       await chrome.debugger.detach(target);
