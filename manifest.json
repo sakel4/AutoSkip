@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Skipper",
+  "version": "0.1.0",
+  "version_name": "0.1.0 beta",
+  "description": "An extension that auto skips the youtube ads.",
+  "homepage_url": "https://sakel.dev/",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open My Extension"
+  },
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtube.com/*",
+    "https://music.youtube.com/*",
+    "https://www.music.youtube.com/*"
+  ],
+  "permissions": ["storage", "debugger"],
+  "incognito": "split",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/watch?*",
+        "https://youtube.com/watch?*",
+        "https://www.music.youtube.com/watch?*",
+        "https://music.youtube.com/watch?*"
+      ],
+      "exclude_matches": [],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "all_frames": true
+}

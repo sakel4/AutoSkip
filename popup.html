@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <h2>YouTube Auto Skip</h2>
+
+  <label>
+    Enable auto-skip
+    <input type="checkbox" id="enabled">
+  </label>
+
+  <label>
+    Show notifications
+    <input type="checkbox" id="notifications">
+  </label>
+
+  <div id="skip-delay-setting">
+
+    <div id="skip-delay-header">
+      <span id="skip-delay-label">Skip delay</span>
+      <span id="skipDelayValue">Instant</span>
+    </div>
+
+    <div id="skip-delay-slider-container">
+      <input
+        type="range"
+        id="skipDelay"
+        min="0"
+        max="3000"
+        step="250"
+        value="0"
+      >
+    </div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
