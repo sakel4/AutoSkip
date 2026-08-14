@@ -14,7 +14,6 @@ console.log({
   extensionId: chrome?.runtime?.id
 });
 
-
 let clickInProgress = false;
 let lastClickTime = 0;
 
@@ -113,47 +112,55 @@ function findVisibleSkipButton() {
 
 async function trySkipAd() {
   const settings = await chrome.storage.sync.get(defaultSettings);
-
   if (!settings.enabled) {
     return;
   }
-
   if (clickInProgress) {
     return;
   }
-
   // Prevent a MutationObserver storm from repeatedly clicking.
   if (Date.now() - lastClickTime < 1500) {
     return;
   }
-
   const button = findVisibleSkipButton();
-
   if (!button) {
     return;
   }
+  console.log("[Skip Extension] Skip button detected", { button });
 
-  const rect = button.getBoundingClientRect();
-
-  const x = rect.left + rect.width / 2;
-  const y = rect.top + rect.height / 2;
-
-  console.log("[Skip Extension] Skip button detected", {
-    button,
-    x,
-    y
-  });
-
+  // Lock immediately so the MutationObserver can't queue up duplicate
+  // attempts while we wait out the configured delay.
   clickInProgress = true;
   lastClickTime = Date.now();
 
+  const delay = Number(settings.skipDelay) || 0;
+
   try {
+    if (delay > 0) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+      // The button may have disappeared or moved during the delay
+      // (ad ended, layout shifted, etc.), so re-resolve it right
+      // before clicking instead of reusing stale coordinates.
+      const stillThere = findVisibleSkipButton();
+      if (!stillThere) {
+        return;
+      }
+    }
+
+    const target = findVisibleSkipButton();
+    if (!target) {
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
     const response = await chrome.runtime.sendMessage({
       type: "CLICK_SKIP_BUTTON",
       x,
       y
     });
-
     console.log("[Skip Extension] Result:", response);
     if (response?.success && settings.notifications) {
       showVideoNotification("Ad skipped");
