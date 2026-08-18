@@ -10,10 +10,10 @@
     "default_title": "Manage Autoskip settings"
   },
   "host_permissions": [
-    "https://www.youtube.com/*",
-    "https://youtube.com/*",
-    "https://music.youtube.com/*",
-    "https://www.music.youtube.com/*"
+    "https://www.youtube.com/watch?*",
+    "https://youtube.com/watch?*",
+    "https://music.youtube.com/watch?*",
+    "https://www.music.youtube.com/watch?*"
   ],
   "permissions": ["storage", "debugger"],
   "incognito": "split",

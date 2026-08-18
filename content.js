@@ -7,6 +7,10 @@ const defaultSettings = {
 let clickInProgress = false;
 let lastClickTime = 0;
 
+function isSupportedPage() {
+  return location.pathname === "/watch";
+}
+
 function showVideoNotification(message, duration = 1000) {
   const player = document.querySelector("#movie_player") ||
                  document.querySelector("#song-media-window")
@@ -96,6 +100,11 @@ function findVisibleSkipButton() {
 }
 
 async function trySkipAd() {
+  // Skip single-page apps like YouTube Music that don't reload the page on navigation.
+  if (!isSupportedPage()) {
+    return;
+  }
+
   const settings = await chrome.storage.sync.get(defaultSettings);
   if (!settings.enabled) {
     return;
