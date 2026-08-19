@@ -10,10 +10,10 @@
     "default_title": "Manage Autoskip settings"
   },
   "host_permissions": [
-    "https://www.youtube.com/watch?*",
-    "https://youtube.com/watch?*",
-    "https://music.youtube.com/watch?*",
-    "https://www.music.youtube.com/watch?*"
+    "https://www.youtube.com/*",
+    "https://youtube.com/*",
+    "https://music.youtube.com/*",
+    "https://www.music.youtube.com/*"
   ],
   "permissions": ["storage", "debugger"],
   "incognito": "split",
@@ -24,15 +24,15 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.youtube.com/watch?*",
-        "https://youtube.com/watch?*",
-        "https://www.music.youtube.com/watch?*",
-        "https://music.youtube.com/watch?*"
+        "https://www.youtube.com/*",
+        "https://youtube.com/*",
+        "https://www.music.youtube.com/*",
+        "https://music.youtube.com/*"
       ],
       "exclude_matches": [],
       "js": ["content.js"],
       "css": ["styles.css"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ],
   "all_frames": true
