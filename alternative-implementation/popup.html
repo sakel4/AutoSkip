@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <h2>AutoSkip: Auto Skip for YouTube & Youtube Music</h2>
+
+  <label>
+    Enable auto-skip
+    <input type="checkbox" id="enabled">
+  </label>
+
+  <label>
+    Show notifications
+    <input type="checkbox" id="notifications">
+  </label>
+
+  <div id="skip-delay-setting">
+
+    <div id="skip-delay-header">
+      <span id="skip-delay-label">Skip delay</span>
+      <span id="skipDelayValue">Instant</span>
+    </div>
+
+    <div id="skip-delay-slider-container">
+      <input
+        type="range"
+        id="skipDelay"
+        min="0"
+        max="3000"
+        step="250"
+        value="0"
+      >
+    </div>
+  </div>
+
+  <details id="about-section">
+    <summary>
+      <span>About this extension</span>
+
+      <svg
+        class="about-chevron"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M6 9L12 15L18 9"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </summary>
+
+    <div class="about-content">
+      <p>
+        AutoSkip automatically skips ads while you're watching YouTube
+        or YouTube Music, helping you enjoy videos with fewer interruptions.
+      </p>
+
+      <p>
+        Created by <strong>Sakellaris Sfakiotakis</strong>.
+      </p>
+
+      <div class="about-links">
+        <a
+          href="https://links.sakel.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span>Creator's Website</span>
+          <span class="external-icon">↗</span>
+        </a>
+
+        <a
+          href="https://github.com/sakel4/AutoSkip"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span>View on GitHub</span>
+          <span class="external-icon">↗</span>
+        </a>
+      </div>
+    </div>
+  </details>
+
+  <script src="popup.js"></script>
+</body>
+</html>
