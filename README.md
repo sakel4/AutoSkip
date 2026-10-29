@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icons/icon-128.png" alt="AutoSkip icon" width="128" height="128">
+</p>
+
 # AutoSkip: Auto Skip for YouTube & YouTube Music
 
 A small, open-source browser extension that **presses YouTube's "Skip Ad" button for you** as soon as it appears, on both YouTube and YouTube Music.
