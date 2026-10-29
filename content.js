@@ -93,7 +93,7 @@
     }
 
     try {
-      // The popup writes to storage.sync, so read from the same area.
+      // The popup writes to storage.sync, so both browser types read from the same area.
       const stored = await storageApi.sync.get(defaultSettings);
       settings = normalizeSettings(stored);
     } catch (error) {
