@@ -7,6 +7,7 @@ const defaults = {
 
 const enabled = document.getElementById("enabled");
 const notifications = document.getElementById("notifications");
+const skipDelay = document.getElementById("skipDelay");
 const skipDelayValue = document.getElementById("skipDelayValue");
 
 

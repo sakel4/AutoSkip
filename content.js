@@ -1,183 +1,330 @@
-const defaultSettings = {
-  enabled: true,
-  notifications: false,
-  skipDelay: 0
-};
+(() => {
+  "use strict";
 
-let clickInProgress = false;
-let lastClickTime = 0;
+  // --- Constants -------------------------------------------------------------
 
-function isSupportedPage() {
-  return location.pathname === "/watch";
-}
+  // Kept in sync with the copy in youtube-bridge.js. Chrome injects a script
+  // file only once per frame, so the two worlds can't share a helper file.
+  const SKIP_BUTTON_SELECTORS = [
+    "button.ytp-skip-ad-button",
+    "button.ytp-ad-skip-button",
+    "button.ytp-ad-skip-button-modern",
+    '[id^="skip-button:"]'
+  ].join(",");
 
-function showVideoNotification(message, duration = 1000) {
-  const player = document.querySelector("#movie_player") ||
-                 document.querySelector("#song-media-window")
+  const BRIDGE_EVENT = "__yt_auto_skip_request__";
 
-  if (!player) {
-    return;
+  function resolveButton(element) {
+    if (!(element instanceof Element)) return null;
+    // Handles dynamic YouTube wrappers such as id="skip-button:2".
+    return element instanceof HTMLButtonElement ? element : element.querySelector("button");
   }
 
-  // Remove previous notification.
-  document.querySelector("#yt-auto-skip-notification")?.remove();
+  function isUsableButton(button) {
+    if (!(button instanceof HTMLButtonElement) || !button.isConnected) return false;
+    if (button.disabled || button.getAttribute("aria-disabled") === "true") return false;
+    if (button.hidden || button.getAttribute("aria-hidden") === "true") return false;
 
-  const playerRect = player.getBoundingClientRect();
+    const style = getComputedStyle(button);
+    if (style.display === "none" || style.visibility === "hidden") return false;
 
-  const notification = document.createElement("div");
+    return button.getClientRects().length > 0;
+  }
 
-  notification.id = "yt-auto-skip-notification";
-  notification.textContent = message;
+  function findSkipButton() {
+    const seen = new Set();
 
-  notification.style.cssText = `
-    position: fixed;
+    for (const candidate of document.querySelectorAll(SKIP_BUTTON_SELECTORS)) {
+      const button = resolveButton(candidate);
+      if (!button || seen.has(button)) continue;
 
-    top: ${playerRect.top + 20}px;
-    left: ${playerRect.left + playerRect.width / 2}px;
+      seen.add(button);
+      if (isUsableButton(button)) return button;
+    }
 
-    transform: translateX(-50%);
+    return null;
+  }
+  const RETRY_DELAY_MS = 750;
+  const MAX_REQUESTS_PER_BUTTON = 4;
 
-    padding: 10px 16px;
+  const defaultSettings = {
+    enabled: true,
+    notifications: false,
+    skipDelay: 0
+  };
 
-    background: rgba(20, 20, 20, 0.9);
-    color: white;
+  let settings = { ...defaultSettings };
+  let pendingTimer = null;
+  let scanQueued = false;
+  let requestCounts = new WeakMap();
 
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+  // --- Storage -----------------------------------------------------------
 
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-
-    z-index: 2147483647;
-
-    pointer-events: none;
-
-    opacity: 0;
-
-    transition: opacity 150ms ease;
-  `;
-
-  document.body.appendChild(notification);
-
-  requestAnimationFrame(() => {
-    notification.style.opacity = "1";
-  });
-
-  setTimeout(() => {
-    notification.style.opacity = "0";
-
-    setTimeout(() => {
-      notification.remove();
-    }, 150);
-  }, duration);
-}
-
-function findVisibleSkipButton() {
-  const button = document.querySelector(".ytp-skip-ad-button") ||
-                 document.querySelector(".ytp-ad-skip-button-modern");
-
-  if (!button) {
+  // `browser` only exists in Firefox (or with a polyfill); Chrome/Edge/Brave
+  // expose the same-shaped API as `chrome`. Resolve whichever is present once.
+  function getStorageApi() {
+    if (typeof browser !== "undefined" && browser.storage?.sync) return browser.storage;
+    if (typeof chrome !== "undefined" && chrome.storage?.sync) return chrome.storage;
     return null;
   }
 
-  const style = getComputedStyle(button);
-  const rect = button.getBoundingClientRect();
+  const storageApi = getStorageApi();
 
-  const visible =
-    style.display !== "none" &&
-    style.visibility !== "hidden" &&
-    rect.width > 0 &&
-    rect.height > 0;
-
-  if (visible) {
-    return button;
+  function isValidDelay(value) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
   }
 
-  return null;
-}
-
-async function trySkipAd() {
-  // Skip single-page apps like YouTube Music that don't reload the page on navigation.
-  if (!isSupportedPage()) {
-    return;
+  function normalizeSettings(values = {}) {
+    return {
+      enabled: typeof values.enabled === "boolean" ? values.enabled : defaultSettings.enabled,
+      notifications:
+        typeof values.notifications === "boolean"
+          ? values.notifications
+          : defaultSettings.notifications,
+      skipDelay: isValidDelay(values.skipDelay) ? values.skipDelay : defaultSettings.skipDelay
+    };
   }
 
-  const settings = await chrome.storage.sync.get(defaultSettings);
-  if (!settings.enabled) {
-    return;
-  }
-  if (clickInProgress) {
-    return;
-  }
-  // Prevent a MutationObserver storm from repeatedly clicking.
-  if (Date.now() - lastClickTime < 1500) {
-    return;
-  }
-  const button = findVisibleSkipButton();
-  if (!button) {
-    return;
-  }
-
-  // Lock immediately so the MutationObserver can't queue up duplicate
-  // attempts while we wait out the configured delay.
-  clickInProgress = true;
-  lastClickTime = Date.now();
-
-  const delay = Number(settings.skipDelay) || 0;
-
-  try {
-    if (delay > 0) {
-      await new Promise(resolve => setTimeout(resolve, delay));
-
-      // The button may have disappeared or moved during the delay
-      // (ad ended, layout shifted, etc.), so re-resolve it right
-      // before clicking instead of reusing stale coordinates.
-      const stillThere = findVisibleSkipButton();
-      if (!stillThere) {
-        return;
-      }
-    }
-
-    const target = findVisibleSkipButton();
-    if (!target) {
+  async function loadSettings() {
+    if (!storageApi) {
+      console.warn("[YT Auto Skip] storage API is unavailable. Using defaults.");
+      settings = { ...defaultSettings };
       return;
     }
-    const rect = target.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
 
-    const response = await chrome.runtime.sendMessage({
-      type: "CLICK_SKIP_BUTTON",
-      x,
-      y
-    });
-    if (response?.success && settings.notifications) {
-      showVideoNotification("Ad skipped");
+    try {
+      // The popup writes to storage.sync, so both browser types read from the same area.
+      const stored = await storageApi.sync.get(defaultSettings);
+      settings = normalizeSettings(stored);
+    } catch (error) {
+      console.warn("[YT Auto Skip] Failed to load settings. Using defaults.", error);
+      settings = { ...defaultSettings };
     }
-  } catch (error) {
-    console.error("[Skip Extension] Error:", error);
-  } finally {
-    clickInProgress = false;
   }
-}
 
-trySkipAd();
+  function installStorageListener() {
+    if (!storageApi?.onChanged) return;
 
-// Observe YouTube's dynamically changing DOM.
-const observer = new MutationObserver(() => {
-  trySkipAd();
-});
+    storageApi.onChanged.addListener((changes, areaName) => {
+      if (areaName !== "sync") return;
 
-observer.observe(document.documentElement, {
-  childList: true,
-  subtree: true,
-  attributes: true,
-  attributeFilter: [
-    "style",
-    "class",
-    "disabled"
-  ]
-});
+      let rescanRequired = false;
+
+      if ("enabled" in changes) {
+        settings.enabled =
+          typeof changes.enabled.newValue === "boolean"
+            ? changes.enabled.newValue
+            : defaultSettings.enabled;
+
+        if (!settings.enabled) {
+          cancelPendingSkip();
+          requestCounts = new WeakMap();
+        } else {
+          rescanRequired = true;
+        }
+      }
+
+      if ("notifications" in changes) {
+        settings.notifications =
+          typeof changes.notifications.newValue === "boolean"
+            ? changes.notifications.newValue
+            : defaultSettings.notifications;
+      }
+
+      if ("skipDelay" in changes) {
+        settings.skipDelay = isValidDelay(changes.skipDelay.newValue)
+          ? changes.skipDelay.newValue
+          : defaultSettings.skipDelay;
+
+        // If a skip countdown is already active, restart it with the new delay.
+        cancelPendingSkip();
+        rescanRequired = true;
+      }
+
+      if (rescanRequired && settings.enabled) queueScan();
+    });
+  }
+
+  // --- Optional notification ------------------------------------------------
+
+  const NOTIFICATION_DURATION_MS = 1000;
+  const NOTIFICATION_FADE_MS = 150;
+
+  function showNotification(message) {
+    if (!settings.notifications) return;
+
+    // YouTube player, or the YouTube Music player.
+    const player =
+      document.querySelector("#movie_player") || document.querySelector("#song-media-window");
+
+    document.getElementById("__yt_auto_skip_notification__")?.remove();
+
+    const notification = document.createElement("div");
+    notification.id = "__yt_auto_skip_notification__";
+    notification.textContent = message;
+
+    // Inline styles so this doesn't require an additional CSS file.
+    Object.assign(notification.style, {
+      // Inside the player so it stays over the video, including in fullscreen,
+      // where elements outside the fullscreen player aren't rendered.
+      position: player ? "absolute" : "fixed",
+      top: "20px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: "2147483647",
+      padding: "10px 16px",
+      background: "rgba(20, 20, 20, 0.9)",
+      color: "#fff",
+      border: "1px solid rgba(255, 255, 255, 0.15)",
+      borderRadius: "8px",
+      fontFamily: "Arial, sans-serif",
+      fontSize: "14px",
+      fontWeight: "500",
+      lineHeight: "1.4",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
+      pointerEvents: "none",
+      opacity: "0",
+      transition: `opacity ${NOTIFICATION_FADE_MS}ms ease`
+    });
+
+    (player || document.body || document.documentElement).appendChild(notification);
+
+    // Flush the initial opacity so the change below transitions. Avoids
+    // requestAnimationFrame, which is paused while the tab isn't rendering.
+    void notification.offsetWidth;
+    notification.style.opacity = "1";
+
+    setTimeout(() => {
+      notification.style.opacity = "0";
+      setTimeout(() => notification.remove(), NOTIFICATION_FADE_MS);
+    }, NOTIFICATION_DURATION_MS);
+  }
+
+  // --- Bridge request ----------------------------------------------------
+
+  function requestBridgeSkip(button) {
+    if (!settings.enabled || !button?.isConnected) return;
+
+    const requestCount = requestCounts.get(button) ?? 0;
+    if (requestCount >= MAX_REQUESTS_PER_BUTTON) return;
+
+    requestCounts.set(button, requestCount + 1);
+
+    window.dispatchEvent(new Event(BRIDGE_EVENT));
+    // Only notify once per ad, not on every retry.
+    if (requestCount === 0) showNotification("Ad skipped");
+
+    // YouTube may leave the button in the DOM briefly after the bridge
+    // request. If it's still the same button, retry a limited number of times.
+    setTimeout(() => {
+      if (!settings.enabled) return;
+      if (findSkipButton() === button) queueScan();
+    }, RETRY_DELAY_MS);
+  }
+
+  // --- Scheduling ----------------------------------------------------------
+
+  function cancelPendingSkip() {
+    if (pendingTimer !== null) {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
+    }
+  }
+
+  function scan() {
+    if (!settings.enabled) {
+      cancelPendingSkip();
+      return;
+    }
+
+    const button = findSkipButton();
+
+    if (!button) {
+      cancelPendingSkip();
+      // Previous ad has disappeared - reset tracking for the next one.
+      requestCounts = new WeakMap();
+      return;
+    }
+
+    // Already waiting for this detection cycle.
+    if (pendingTimer !== null) return;
+
+    const requestCount = requestCounts.get(button) ?? 0;
+    if (requestCount >= MAX_REQUESTS_PER_BUTTON) return;
+
+    const delay = Math.max(0, Number(settings.skipDelay) || 0);
+
+    // Even with delay === 0, setTimeout ensures the request happens after
+    // this mutation cycle.
+    pendingTimer = setTimeout(() => {
+      pendingTimer = null;
+      if (!settings.enabled) return;
+
+      // YouTube changes its DOM frequently - re-find the current button
+      // after the configured delay.
+      const currentButton = findSkipButton();
+      if (currentButton) requestBridgeSkip(currentButton);
+    }, delay);
+  }
+
+  function queueScan() {
+    if (scanQueued) return;
+
+    scanQueued = true;
+    queueMicrotask(() => {
+      scanQueued = false;
+      scan();
+    });
+  }
+
+  // --- DOM observer ----------------------------------------------------------
+
+  function startObserver() {
+    new MutationObserver(() => {
+      if (settings.enabled) queueScan();
+    }).observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["id", "class", "style", "hidden", "disabled", "aria-hidden", "aria-disabled"]
+    });
+  }
+
+  // --- YouTube SPA navigation -------------------------------------------------
+
+  window.addEventListener(
+    "yt-navigate-start",
+    () => {
+      cancelPendingSkip();
+      requestCounts = new WeakMap();
+    },
+    true
+  );
+
+  window.addEventListener(
+    "yt-navigate-finish",
+    () => {
+      if (settings.enabled) queueScan();
+    },
+    true
+  );
+
+  // --- Initialization ----------------------------------------------------
+
+  async function initialize() {
+    // Load settings before observing, so a disabled extension or a configured
+    // delay is respected from the very first skip button.
+    await loadSettings();
+    installStorageListener();
+    startObserver();
+
+    if (settings.enabled) queueScan();
+  }
+
+  initialize().catch(error => {
+    console.error("[YT Auto Skip] Initialization failed:", error);
+    settings = { ...defaultSettings };
+    startObserver();
+    if (settings.enabled) queueScan();
+  });
+})();
