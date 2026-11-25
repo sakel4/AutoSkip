@@ -60,15 +60,7 @@
 
   // --- Storage -----------------------------------------------------------
 
-  // `browser` only exists in Firefox (or with a polyfill); Chrome/Edge/Brave
-  // expose the same-shaped API as `chrome`. Resolve whichever is present once.
-  function getStorageApi() {
-    if (typeof browser !== "undefined" && browser.storage?.sync) return browser.storage;
-    if (typeof chrome !== "undefined" && chrome.storage?.sync) return chrome.storage;
-    return null;
-  }
-
-  const storageApi = getStorageApi();
+  // Firefox 128+ and Chrome 111+ both expose promise-based `chrome.storage` in MV3.
 
   function isValidDelay(value) {
     return typeof value === "number" && Number.isFinite(value) && value >= 0;
@@ -86,16 +78,9 @@
   }
 
   async function loadSettings() {
-    if (!storageApi) {
-      console.warn("[YT Auto Skip] storage API is unavailable. Using defaults.");
-      settings = { ...defaultSettings };
-      return;
-    }
-
     try {
       // The popup writes to storage.sync, so both browser types read from the same area.
-      const stored = await storageApi.sync.get(defaultSettings);
-      settings = normalizeSettings(stored);
+      settings = normalizeSettings(await chrome.storage.sync.get(defaultSettings));
     } catch (error) {
       console.warn("[YT Auto Skip] Failed to load settings. Using defaults.", error);
       settings = { ...defaultSettings };
@@ -103,45 +88,22 @@
   }
 
   function installStorageListener() {
-    if (!storageApi?.onChanged) return;
-
-    storageApi.onChanged.addListener((changes, areaName) => {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName !== "sync") return;
 
-      let rescanRequired = false;
+      // A removed key has newValue undefined, which normalizes back to its default.
+      const updates = {};
+      for (const [key, { newValue }] of Object.entries(changes)) updates[key] = newValue;
+      settings = normalizeSettings({ ...settings, ...updates });
 
-      if ("enabled" in changes) {
-        settings.enabled =
-          typeof changes.enabled.newValue === "boolean"
-            ? changes.enabled.newValue
-            : defaultSettings.enabled;
-
-        if (!settings.enabled) {
-          cancelPendingSkip();
-          requestCounts = new WeakMap();
-        } else {
-          rescanRequired = true;
-        }
-      }
-
-      if ("notifications" in changes) {
-        settings.notifications =
-          typeof changes.notifications.newValue === "boolean"
-            ? changes.notifications.newValue
-            : defaultSettings.notifications;
-      }
-
-      if ("skipDelay" in changes) {
-        settings.skipDelay = isValidDelay(changes.skipDelay.newValue)
-          ? changes.skipDelay.newValue
-          : defaultSettings.skipDelay;
-
+      if (!settings.enabled) {
+        cancelPendingSkip();
+        requestCounts = new WeakMap();
+      } else if ("enabled" in changes || "skipDelay" in changes) {
         // If a skip countdown is already active, restart it with the new delay.
         cancelPendingSkip();
-        rescanRequired = true;
+        queueScan();
       }
-
-      if (rescanRequired && settings.enabled) queueScan();
     });
   }
 
@@ -216,9 +178,9 @@
 
     // YouTube may leave the button in the DOM briefly after the bridge
     // request. If it's still the same button, retry a limited number of times.
+    // This timer is the only retry path, so retries stay RETRY_DELAY_MS apart.
     setTimeout(() => {
-      if (!settings.enabled) return;
-      if (findSkipButton() === button) queueScan();
+      if (settings.enabled && findSkipButton() === button) requestBridgeSkip(button);
     }, RETRY_DELAY_MS);
   }
 
@@ -246,13 +208,9 @@
       return;
     }
 
-    // Already waiting for this detection cycle.
-    if (pendingTimer !== null) return;
-
-    const requestCount = requestCounts.get(button) ?? 0;
-    if (requestCount >= MAX_REQUESTS_PER_BUTTON) return;
-
-    const delay = Math.max(0, Number(settings.skipDelay) || 0);
+    // Already waiting for this detection cycle, or already requested for this
+    // button (requestBridgeSkip's retry timer handles repeats).
+    if (pendingTimer !== null || requestCounts.has(button)) return;
 
     // Even with delay === 0, setTimeout ensures the request happens after
     // this mutation cycle.
@@ -264,7 +222,7 @@
       // after the configured delay.
       const currentButton = findSkipButton();
       if (currentButton) requestBridgeSkip(currentButton);
-    }, delay);
+    }, settings.skipDelay);
   }
 
   function queueScan() {
@@ -321,10 +279,5 @@
     if (settings.enabled) queueScan();
   }
 
-  initialize().catch(error => {
-    console.error("[YT Auto Skip] Initialization failed:", error);
-    settings = { ...defaultSettings };
-    startObserver();
-    if (settings.enabled) queueScan();
-  });
+  initialize().catch(error => console.error("[YT Auto Skip] Initialization failed:", error));
 })();
