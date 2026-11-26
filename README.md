@@ -109,6 +109,7 @@ After changing the code, reload the extension (`chrome://extensions` → **Reloa
 | `content.js` | Settings, Skip button detection, delay, retries and notification. |
 | `youtube-bridge.js` | Runs inside the YouTube page and triggers the Skip button's click handling. |
 | `popup.html` / `popup.css` / `popup.js` | The settings popup. |
+| `tests/` | Tests for the bridge, settings storage, retries, Skip button detection and page switches. Run `node --test tests/` (Node 20.4+, no install needed). Leave this folder out of the packaged zip. |
 
 Contributions, bug reports and ideas are welcome on [GitHub](https://github.com/sakel4/AutoSkip).
 
