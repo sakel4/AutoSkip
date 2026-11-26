@@ -14,8 +14,10 @@ const skipDelay = document.getElementById("skipDelay");
 const skipDelayValue = document.getElementById("skipDelayValue");
 const accentColor = document.getElementById("accentColor");
 const baseColor = document.getElementById("baseColor");
-// Each picker's id is its settings key.
+// Hidden inputs holding the current colours; each id is its settings key.
 const colorInputs = [accentColor, baseColor];
+// The in-popup colour picker of each colour input (see color-picker.js).
+const pickers = new Map();
 
 
 async function loadSettings() {
@@ -34,14 +36,24 @@ function showColors(colors) {
   for (const input of colorInputs) {
     const value = colors?.[input.id];
     input.value = /^#[0-9a-f]{6}$/i.test(value) ? value : defaults[input.id];
-    hexField(input).value = input.value;
+    colorPart(input, "Hex").value = input.value;
   }
   applyColors();
 }
 
-// The text field next to each picker, for typing or pasting a hex code.
-function hexField(input) {
-  return document.getElementById(`${input.id}Hex`);
+// An element belonging to one colour, found by the colour's id plus a suffix:
+// "Hex" (text field), "Swatch" (button) or "Picker" (picker panel).
+function colorPart(input, part) {
+  return document.getElementById(input.id + part);
+}
+
+// Opens this colour's picker and closes the other one, or closes it if open.
+function togglePicker(input) {
+  for (const other of colorInputs) {
+    const open = other === input && colorPart(other, "Picker").hidden;
+    colorPart(other, "Picker").hidden = !open;
+    colorPart(other, "Swatch").setAttribute("aria-expanded", String(open));
+  }
 }
 
 // "#FF3B30", "ff3b30", " #f3b " -> "#ff3b30" / "#ff33bb"; anything else -> null.
@@ -95,6 +107,11 @@ function applyColors() {
   const lightBase = brightness(baseColor.value) > 0.6;
   root.setProperty("--text", lightBase ? "#15171c" : "#f5f7fa");
   root.setProperty("--text-muted", lightBase ? "#5b616d" : "#9299a6");
+
+  for (const input of colorInputs) {
+    colorPart(input, "Swatch").style.setProperty("background-color", input.value);
+    pickers.get(input).setColor(input.value);
+  }
 }
 
 function updateDelayDisplay() {
@@ -132,13 +149,17 @@ skipDelay.addEventListener("change", saveSettings);
 
 // Preview while picking, save once picked: storage.sync limits writes per minute.
 for (const input of colorInputs) {
-  const hex = hexField(input);
+  const hex = colorPart(input, "Hex");
 
-  input.addEventListener("input", () => {
-    hex.value = input.value;
-    applyColors();
-  });
-  input.addEventListener("change", saveSettings);
+  pickers.set(input, ColorPicker.create(colorPart(input, "Picker"), {
+    onInput: color => {
+      input.value = color;
+      hex.value = color;
+      applyColors();
+    },
+    onChange: saveSettings
+  }));
+  colorPart(input, "Swatch").addEventListener("click", () => togglePicker(input));
 
   // Typing or pasting a valid code previews it straight away.
   hex.addEventListener("input", () => {

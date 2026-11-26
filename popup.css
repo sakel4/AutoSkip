@@ -286,33 +286,22 @@ input[type="range"]::-moz-range-track {
   gap: 6px;
 }
 
-input[type="color"] {
-  appearance: none;
-  -webkit-appearance: none;
-
+/* Swatch button: shows the current colour (set in popup.js) and opens its picker. */
+.color-swatch {
   width: 32px;
   height: 22px;
   padding: 0;
 
-  background: none;
   border: 1px solid var(--border);
   border-radius: 999px;
 
   cursor: pointer;
 }
 
-input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-input[type="color"]::-webkit-color-swatch {
-  border: none;
-  border-radius: 999px;
-}
-
-input[type="color"]::-moz-color-swatch {
-  border: none;
-  border-radius: 999px;
+.color-swatch[aria-expanded="true"] {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--text);
 }
 
 .color-hex {
@@ -351,10 +340,71 @@ input[type="color"]::-moz-color-swatch {
   background: var(--surface-hover);
 }
 
-input[type="color"]:focus-visible,
+.color-swatch:focus-visible,
 .color-reset:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
   outline-offset: 3px;
+}
+
+/* Colour picker (color-picker.js): a saturation/brightness square over a hue
+   slider. --hue is set by the picker; the square is two gradients over it. */
+
+.color-picker {
+  --hue: 0;
+
+  display: grid;
+  gap: 12px;
+
+  padding-top: 12px;
+}
+
+.color-picker[hidden] {
+  display: none;
+}
+
+.color-picker-area {
+  position: relative;
+  height: 120px;
+
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, hsl(var(--hue) 100% 50%));
+  border-radius: 8px;
+
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.color-picker-area:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.color-picker-thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* The hue slider reuses the skip-delay slider styles, with a rainbow track.
+   "input." matches the specificity of the input[type="range"] rules above. */
+input.color-picker-hue {
+  --rainbow: linear-gradient(to right,
+    hsl(0 100% 50%), hsl(60 100% 50%), hsl(120 100% 50%),
+    hsl(180 100% 50%), hsl(240 100% 50%), hsl(300 100% 50%), hsl(360 100% 50%));
+
+  background: var(--rainbow);
+}
+
+input.color-picker-hue::-moz-range-track {
+  background: var(--rainbow);
 }
 
 /* About section */
