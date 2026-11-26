@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - run: node --test tests/
+
+      - name: Check tag matches manifest version
+        run: |
+          V=$(node -p "require('./manifest.json').version")
+          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME does not match manifest version $V"; exit 1; }
+
+      - name: Package extension
+        run: zip -r "AutoSkip-$GITHUB_REF_NAME.zip" manifest.json *.js popup.html popup.css icons license.txt
+
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" "AutoSkip-$GITHUB_REF_NAME.zip" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

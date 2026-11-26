@@ -113,7 +113,7 @@ After changing the code, reload the extension (`chrome://extensions` → **Reloa
 | `youtube-bridge.js` | Runs inside the YouTube page and triggers the Skip button's click handling. |
 | `popup.html` / `popup.css` / `popup.js` | The settings popup. |
 | `color-picker.js` | The colour picker inside the popup (used instead of the browser's, whose separate dialog closes the popup in Firefox). |
-| `tests/` | Tests for the bridge, settings storage, retries, Skip button detection, page switches, the popup and the colour picker. Run `node --test tests/` (Node 20.4+, no install needed). Leave this folder out of the packaged zip. |
+| `tests/` | Tests for the bridge, settings storage, retries, Skip button detection, page switches, the popup and the colour picker. Run `node --test tests/` (Node 24+, no install needed). Leave this folder out of the packaged zip. |
 
 Contributions, bug reports and ideas are welcome on [GitHub](https://github.com/sakel4/AutoSkip).
 
