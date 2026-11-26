@@ -32,6 +32,9 @@ Click the AutoSkip icon in your browser toolbar to open the settings:
 | **Enable auto-skip** | Turns automatic skipping on or off. |
 | **Show notifications** | Shows a short "Ad skipped" message over the video. Off by default. |
 | **Skip delay** | How long to wait after the Skip button appears (Instant to 3s). |
+| **Appearance → Accent colour** | The popup's highlight colour (switches, slider, links). **Reset** brings back the default red. |
+| **Appearance → Base colour** | The popup's background. Cards and borders follow it, and text turns dark on a light base. **Reset** brings back the default dark grey. |
+| | For both colours, use the swatch or type/paste a hex code (`#ff3b30`, `ff3b30` or `#f33`). It previews as you type and saves on Enter. |
 
 Changes apply immediately. There's no need to reload YouTube.
 
@@ -61,13 +64,13 @@ The same code runs in both Firefox and Chromium browsers. No special browser per
 
 | Permission | Why |
 | --- | --- |
-| `storage` | To remember your settings (on/off, notifications, delay). |
+| `storage` | To remember your settings (on/off, notifications, delay, popup colours). |
 
 The extension only runs on `youtube.com` and `music.youtube.com`.
 
 ## Privacy
 
-AutoSkip doesn't collect, store or send anything about you: not your history, the videos you watch, or the ads you see. Your three settings are saved in your browser's own extension storage and synced by your browser if you have sync turned on.
+AutoSkip doesn't collect, store or send anything about you: not your history, the videos you watch, or the ads you see. Your settings are saved in your browser's own extension storage and synced by your browser if you have sync turned on.
 
 ## Installation
 
