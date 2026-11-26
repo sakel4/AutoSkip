@@ -6,16 +6,15 @@
 
 :root {
   --bg: #0f1115;
-  --surface: #181b21;
-  --surface-hover: #20242c;
+  --surface: color-mix(in srgb, var(--bg) 96%, var(--text));
+  --surface-hover: color-mix(in srgb, var(--bg) 92%, var(--text));
 
   --text: #f5f7fa;
   --text-muted: #9299a6;
 
   --accent: #ff3b30;
-  --accent-hover: #ff5148;
 
-  --border: rgba(255, 255, 255, 0.08);
+  --border: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 body {
@@ -33,7 +32,7 @@ body {
   background:
     radial-gradient(
       circle at top,
-      rgba(255, 59, 48, 0.1),
+      color-mix(in srgb, var(--accent) 10%, transparent),
       transparent 180px
     ),
     var(--bg);
@@ -79,7 +78,7 @@ body > label {
 
 body > label:hover {
   background: var(--surface-hover);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 body > label:active {
@@ -98,7 +97,7 @@ input[type="checkbox"] {
   height: 22px;
   margin: 0;
 
-  background: #343943;
+  background: color-mix(in srgb, var(--bg) 82%, var(--text));
   border-radius: 999px;
 
   cursor: pointer;
@@ -148,7 +147,7 @@ input[type="checkbox"]:checked:active::before {
 
 input[type="checkbox"]:focus-visible,
 input[type="range"]:focus-visible {
-  outline: 2px solid rgba(255, 59, 48, 0.7);
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
   outline-offset: 3px;
 }
 
@@ -181,10 +180,10 @@ input[type="range"]:focus-visible {
 
   font-size: 12px;
   font-weight: 600;
-  color: #ff756d;
+  color: color-mix(in srgb, var(--accent) 70%, var(--text));
 
-  background: rgba(255, 59, 48, 0.12);
-  border: 1px solid rgba(255, 59, 48, 0.18);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
   border-radius: 6px;
 }
 
@@ -202,7 +201,7 @@ input[type="range"] {
   width: 100%;
   height: 5px;
 
-  background: #343943;
+  background: color-mix(in srgb, var(--bg) 82%, var(--text));
   border-radius: 999px;
 
   cursor: pointer;
@@ -224,7 +223,7 @@ input[type="range"]::-webkit-slider-thumb {
 
   box-shadow:
     0 2px 6px rgba(0, 0, 0, 0.35),
-    0 0 0 3px rgba(255, 59, 48, 0.1);
+    0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
 
   transition:
     transform 0.15s ease,
@@ -236,7 +235,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.4),
-    0 0 0 5px rgba(255, 59, 48, 0.12);
+    0 0 0 5px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* Firefox */
@@ -251,7 +250,7 @@ input[type="range"]::-moz-range-thumb {
 
   box-shadow:
     0 2px 6px rgba(0, 0, 0, 0.35),
-    0 0 0 3px rgba(255, 59, 48, 0.1);
+    0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
 
   cursor: pointer;
 }
@@ -259,13 +258,158 @@ input[type="range"]::-moz-range-thumb {
 input[type="range"]::-moz-range-track {
   height: 5px;
 
-  background: #343943;
+  background: color-mix(in srgb, var(--bg) 82%, var(--text));
   border-radius: 999px;
+}
+
+/* Appearance: colour rows */
+
+.color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  white-space: nowrap;
+
+  padding-top: 13px;
+
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.color-controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Swatch button: shows the current colour (set in popup.js) and opens its picker. */
+.color-swatch {
+  width: 32px;
+  height: 22px;
+  padding: 0;
+
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  cursor: pointer;
+}
+
+.color-swatch[aria-expanded="true"] {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--text);
+}
+
+.color-hex {
+  width: 60px;
+  padding: 4px 6px;
+
+  font: 12px ui-monospace, Consolas, monospace;
+  color: var(--text);
+
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.color-hex:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 1px;
+}
+
+.color-reset {
+  padding: 4px 7px;
+
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-muted);
+
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.color-reset:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.color-swatch:focus-visible,
+.color-reset:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 3px;
+}
+
+/* Colour picker (color-picker.js): a saturation/brightness square over a hue
+   slider. --hue is set by the picker; the square is two gradients over it. */
+
+.color-picker {
+  --hue: 0;
+
+  display: grid;
+  gap: 12px;
+
+  padding-top: 12px;
+}
+
+.color-picker[hidden] {
+  display: none;
+}
+
+.color-picker-area {
+  position: relative;
+  height: 120px;
+
+  background:
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, hsl(var(--hue) 100% 50%));
+  border-radius: 8px;
+
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.color-picker-area:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.color-picker-thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* The hue slider reuses the skip-delay slider styles, with a rainbow track.
+   "input." matches the specificity of the input[type="range"] rules above. */
+input.color-picker-hue {
+  --rainbow: linear-gradient(to right,
+    hsl(0 100% 50%), hsl(60 100% 50%), hsl(120 100% 50%),
+    hsl(180 100% 50%), hsl(240 100% 50%), hsl(300 100% 50%), hsl(360 100% 50%));
+
+  background: var(--rainbow);
+}
+
+input.color-picker-hue::-moz-range-track {
+  background: var(--rainbow);
 }
 
 /* About section */
 
-#about-section {
+.collapsible {
   margin-top: 14px;
 
   background: var(--surface);
@@ -279,23 +423,23 @@ input[type="range"]::-moz-range-track {
     border-color 0.2s ease;
 }
 
-#about-section:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+.collapsible:hover {
+  border-color: color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 /* Remove default details marker */
 
-#about-section summary {
+.collapsible summary {
   list-style: none;
 }
 
-#about-section summary::-webkit-details-marker {
+.collapsible summary::-webkit-details-marker {
   display: none;
 }
 
 /* Header */
 
-#about-section summary {
+.collapsible summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -313,18 +457,18 @@ input[type="range"]::-moz-range-track {
   transition: background 0.2s ease;
 }
 
-#about-section summary:hover {
+.collapsible summary:hover {
   background: var(--surface-hover);
 }
 
-#about-section summary:focus-visible {
-  outline: 2px solid rgba(255, 59, 48, 0.7);
+.collapsible summary:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
   outline-offset: -2px;
 }
 
 /* Chevron */
 
-.about-chevron {
+.chevron {
   color: var(--text-muted);
 
   transition:
@@ -332,14 +476,14 @@ input[type="range"]::-moz-range-track {
     color 0.2s ease;
 }
 
-#about-section[open] .about-chevron {
+.collapsible[open] .chevron {
   transform: rotate(180deg);
   color: var(--text);
 }
 
 /* Open content */
 
-.about-content {
+.collapsible-content {
   padding: 0 14px 14px;
 
   border-top: 1px solid var(--border);
@@ -349,11 +493,11 @@ input[type="range"]::-moz-range-track {
   line-height: 1.55;
 }
 
-.about-content p {
+.collapsible-content p {
   margin: 13px 0;
 }
 
-.about-content strong {
+.collapsible-content strong {
   color: var(--text);
   font-weight: 600;
 }
@@ -379,7 +523,7 @@ input[type="range"]::-moz-range-track {
   color: var(--text);
   text-decoration: none;
 
-  background: rgba(255, 255, 255, 0.035);
+  background: color-mix(in srgb, var(--text) 3.5%, transparent);
   border: 1px solid var(--border);
   border-radius: 8px;
 
@@ -393,8 +537,8 @@ input[type="range"]::-moz-range-track {
 }
 
 .about-links a:hover {
-  background: rgba(255, 59, 48, 0.08);
-  border-color: rgba(255, 59, 48, 0.25);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
 
   transform: translateY(-1px);
 }

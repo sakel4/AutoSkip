@@ -1,13 +1,10 @@
 // Run with: node --test tests/
-// Settings storage, from both sides: the popup writes storage.sync, content.js reads it.
+// Settings storage, read by content.js (the popup side is in popup.test.js).
 // Chrome and Firefox both run this through the same promise-based `chrome.storage`
 // API (MV3), so one fake covers both browsers.
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const vm = require("node:vm");
-const { read, flush, fakeChrome, loadContent } = require("./fake-page");
-
-const popupSource = read("popup.js");
+const { loadContent } = require("./fake-page");
 
 // --- content.js ------------------------------------------------------------
 
@@ -83,56 +80,13 @@ test("content: changes from other storage areas are ignored", async t => {
   assert.equal(page.requests, 1);
 });
 
-// --- popup.js --------------------------------------------------------------
-
-function fakeInput(props) {
-  const listeners = {};
-  return {
-    ...props,
-    style: { setProperty() {} },
-    addEventListener: (type, fn) => (listeners[type] = fn),
-    fire: type => listeners[type]()
-  };
-}
-
-async function loadPopup(stored) {
-  const chrome = fakeChrome(stored);
-  const controls = {
-    enabled: fakeInput({ checked: false }),
-    notifications: fakeInput({ checked: false }),
-    skipDelay: fakeInput({ value: "0", min: "0", max: "3000" }),
-    skipDelayValue: fakeInput({ textContent: "" })
-  };
-  vm.runInNewContext(popupSource, { chrome, document: { getElementById: id => controls[id] } });
-  await flush();
-  return { chrome, ...controls };
-}
-
-test("popup: empty storage shows the defaults", async () => {
-  const popup = await loadPopup({});
-  assert.equal(popup.enabled.checked, true);
-  assert.equal(popup.notifications.checked, false);
-  assert.equal(Number(popup.skipDelay.value), 0);
-  assert.equal(popup.skipDelayValue.textContent, "Instant");
-});
-
-test("popup: stored settings are shown", async () => {
-  const popup = await loadPopup({ enabled: false, notifications: true, skipDelay: 1500 });
-  assert.equal(popup.enabled.checked, false);
-  assert.equal(popup.notifications.checked, true);
-  assert.equal(Number(popup.skipDelay.value), 1500);
-  assert.equal(popup.skipDelayValue.textContent, "1.5s");
-});
-
-test("popup: changes save all settings, with the delay as a number", async () => {
-  const popup = await loadPopup({});
-
-  // Spread into a plain object: objects built inside the vm sandbox have another Object prototype.
-  popup.notifications.checked = true;
-  await popup.notifications.fire("change");
-  assert.deepEqual({ ...popup.chrome.saved.at(-1) }, { enabled: true, notifications: true, skipDelay: 0 });
-
-  popup.skipDelay.value = "750"; // range inputs report strings
-  await popup.skipDelay.fire("change");
-  assert.deepEqual({ ...popup.chrome.saved.at(-1) }, { enabled: true, notifications: true, skipDelay: 750 });
+test("content: colour changes don't affect skipping", async t => {
+  const page = await loadContent(t, { skipDelay: 500 });
+  page.tick(300);
+  await page.change({
+    accentColor: { oldValue: "#ff3b30", newValue: "#00aa55" },
+    baseColor: { oldValue: "#0f1115", newValue: "#f4f4f0" }
+  });
+  page.tick(200);
+  assert.equal(page.requests, 1);
 });

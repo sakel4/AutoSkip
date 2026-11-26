@@ -119,4 +119,44 @@ async function loadContent(t, stored = {}, { failGet, candidates } = {}) {
   return page;
 }
 
-module.exports = { read, flush, fakeChrome, loadContent, Element, HTMLButtonElement };
+// --- Popup fakes ---------------------------------------------------------------
+
+// A stand-in DOM element that records styles, attributes and listeners.
+// fire(type, event) runs the listener and returns what it returns.
+function fakeElement(props = {}) {
+  const listeners = {};
+  const attributes = {};
+  return {
+    ...props,
+    attributes,
+    setAttribute: (name, value) => (attributes[name] = value),
+    style: { props: {}, setProperty(name, value) { this.props[name] = value; } },
+    addEventListener: (type, fn) => (listeners[type] = fn),
+    fire: (type, event = {}) => listeners[type]({ preventDefault() {}, ...event })
+  };
+}
+
+// One colour picker panel as written in popup.html, with a 200x100 square at 0,0.
+// `parts` gives the test direct access to the square, thumb and hue slider.
+function fakePickerPanel() {
+  const captured = new Set();
+  const parts = {
+    area: fakeElement({
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 200, height: 100 }),
+      setPointerCapture: id => captured.add(id),
+      hasPointerCapture: id => captured.has(id)
+    }),
+    thumb: fakeElement(),
+    hue: fakeElement({ value: "0" })
+  };
+  const bySelector = {
+    ".color-picker-area": parts.area,
+    ".color-picker-thumb": parts.thumb,
+    ".color-picker-hue": parts.hue
+  };
+  return fakeElement({ hidden: true, parts, querySelector: selector => bySelector[selector] });
+}
+
+module.exports = {
+  read, flush, fakeChrome, loadContent, Element, HTMLButtonElement, fakeElement, fakePickerPanel
+};

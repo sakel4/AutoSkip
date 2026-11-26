@@ -32,6 +32,9 @@ Click the AutoSkip icon in your browser toolbar to open the settings:
 | **Enable auto-skip** | Turns automatic skipping on or off. |
 | **Show notifications** | Shows a short "Ad skipped" message over the video. Off by default. |
 | **Skip delay** | How long to wait after the Skip button appears (Instant to 3s). |
+| **Appearance → Accent colour** | The popup's highlight colour (switches, slider, links). **Reset** brings back the default red. |
+| **Appearance → Base colour** | The popup's background. Cards and borders follow it, and text turns dark on a light base. **Reset** brings back the default dark grey. |
+| | For both colours, click the swatch to open a colour picker inside the popup (drag the square, slide the hue; arrow keys work too), or type/paste a hex code (`#ff3b30`, `ff3b30` or `#f33`). Colours preview live and save when you let go or press Enter. |
 
 Changes apply immediately. There's no need to reload YouTube.
 
@@ -61,13 +64,13 @@ The same code runs in both Firefox and Chromium browsers. No special browser per
 
 | Permission | Why |
 | --- | --- |
-| `storage` | To remember your settings (on/off, notifications, delay). |
+| `storage` | To remember your settings (on/off, notifications, delay, popup colours). |
 
 The extension only runs on `youtube.com` and `music.youtube.com`.
 
 ## Privacy
 
-AutoSkip doesn't collect, store or send anything about you: not your history, the videos you watch, or the ads you see. Your three settings are saved in your browser's own extension storage and synced by your browser if you have sync turned on.
+AutoSkip doesn't collect, store or send anything about you: not your history, the videos you watch, or the ads you see. Your settings are saved in your browser's own extension storage and synced by your browser if you have sync turned on.
 
 ## Installation
 
@@ -109,7 +112,8 @@ After changing the code, reload the extension (`chrome://extensions` → **Reloa
 | `content.js` | Settings, Skip button detection, delay, retries and notification. |
 | `youtube-bridge.js` | Runs inside the YouTube page and triggers the Skip button's click handling. |
 | `popup.html` / `popup.css` / `popup.js` | The settings popup. |
-| `tests/` | Tests for the bridge, settings storage, retries, Skip button detection and page switches. Run `node --test tests/` (Node 20.4+, no install needed). Leave this folder out of the packaged zip. |
+| `color-picker.js` | The colour picker inside the popup (used instead of the browser's, whose separate dialog closes the popup in Firefox). |
+| `tests/` | Tests for the bridge, settings storage, retries, Skip button detection, page switches, the popup and the colour picker. Run `node --test tests/` (Node 20.4+, no install needed). Leave this folder out of the packaged zip. |
 
 Contributions, bug reports and ideas are welcome on [GitHub](https://github.com/sakel4/AutoSkip).
 

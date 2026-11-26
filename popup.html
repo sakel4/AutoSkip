@@ -38,12 +38,12 @@
     </div>
   </div>
 
-  <details id="about-section">
+  <details id="appearance-section" class="collapsible">
     <summary>
-      <span>About this extension</span>
+      <span>Appearance</span>
 
       <svg
-        class="about-chevron"
+        class="chevron"
         width="16"
         height="16"
         viewBox="0 0 24 24"
@@ -60,7 +60,66 @@
       </svg>
     </summary>
 
-    <div class="about-content">
+    <div class="collapsible-content">
+      <!-- Each swatch opens an in-popup picker (color-picker.js); the colour itself
+           is kept in the hidden input, whose id is the settings key. -->
+      <div class="color-row">
+        <label for="accentColorSwatch">Accent colour</label>
+        <span class="color-controls">
+          <input type="hidden" id="accentColor" value="#ff3b30">
+          <button type="button" id="accentColorSwatch" class="color-swatch" aria-expanded="false" aria-controls="accentColorPicker"></button>
+          <input type="text" id="accentColorHex" class="color-hex" aria-label="Accent colour hex code" spellcheck="false" autocomplete="off">
+          <button type="button" id="reset-accentColor" class="color-reset" aria-label="Reset accent colour">Reset</button>
+        </span>
+      </div>
+      <div id="accentColorPicker" class="color-picker" hidden>
+        <div class="color-picker-area" role="slider" tabindex="0" aria-label="Accent colour saturation and brightness">
+          <div class="color-picker-thumb"></div>
+        </div>
+        <input type="range" class="color-picker-hue" min="0" max="359" aria-label="Accent colour hue">
+      </div>
+
+      <div class="color-row">
+        <label for="baseColorSwatch">Base colour</label>
+        <span class="color-controls">
+          <input type="hidden" id="baseColor" value="#0f1115">
+          <button type="button" id="baseColorSwatch" class="color-swatch" aria-expanded="false" aria-controls="baseColorPicker"></button>
+          <input type="text" id="baseColorHex" class="color-hex" aria-label="Base colour hex code" spellcheck="false" autocomplete="off">
+          <button type="button" id="reset-baseColor" class="color-reset" aria-label="Reset base colour">Reset</button>
+        </span>
+      </div>
+      <div id="baseColorPicker" class="color-picker" hidden>
+        <div class="color-picker-area" role="slider" tabindex="0" aria-label="Base colour saturation and brightness">
+          <div class="color-picker-thumb"></div>
+        </div>
+        <input type="range" class="color-picker-hue" min="0" max="359" aria-label="Base colour hue">
+      </div>
+    </div>
+  </details>
+
+  <details id="about-section" class="collapsible">
+    <summary>
+      <span>About this extension</span>
+
+      <svg
+        class="chevron"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M6 9L12 15L18 9"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </summary>
+
+    <div class="collapsible-content">
       <p>
         AutoSkip automatically skips ads while you're watching YouTube
         or YouTube Music, helping you enjoy videos with fewer interruptions.
@@ -92,6 +151,7 @@
     </div>
   </details>
 
+  <script src="color-picker.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
